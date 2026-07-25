@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-predictor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-predictor
+  template:
+    metadata:
+      labels:
+        app: ai-predictor
+    spec:
+      serviceAccountName: predictor-sa
+      containers:
+      - name: ai-predictor
+        image: predictops-predictor:v1
+        imagePullPolicy: Never
+        envFrom:
+        - secretRef:
+            name: azure-openai-secret

@@ -1,0 +1,7 @@
+FROM python:3.11-slim
+WORKDIR /app
+COPY predict.py .
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+RUN apt-get update && apt-get install -y curl &&     curl -LO "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl" &&     chmod +x kubectl && mv kubectl /usr/local/bin/
+CMD ["python", "predict.py"]
