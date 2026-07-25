@@ -1,0 +1,54 @@
+name: PredictOps CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Lint check (syntax validation)
+        run: python -m py_compile app.py predict.py
+
+      - name: Build Docker image (app)
+        run: docker build -t predictops-demo:ci -f Dockerfile .
+
+      - name: Build Docker image (predictor)
+        run: docker build -t predictops-predictor:ci -f Dockerfile.predictor .
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          password: ${{ secrets.VM_PASSWORD }}
+          script: |
+            cd ~/PredictOps-AIOps-Kubernetes
+            git pull origin main
+            docker build -t predictops-demo:v1 -f Dockerfile .
+            docker build -t predictops-predictor:v1 -f Dockerfile.predictor .
+            docker save predictops-demo:v1 -o app.tar
+            docker save predictops-predictor:v1 -o predictor.tar
+            sudo ctr -n k8s.io images import app.tar
+            sudo ctr -n k8s.io images import predictor.tar
+            kubectl rollout restart deployment predictops-demo
+            kubectl rollout restart deployment ai-predictor
