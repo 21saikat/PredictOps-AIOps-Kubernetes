@@ -79,7 +79,7 @@ kubectl logs -f -l app=ai-predictor
 
 ## Author
 
-Abu Jor Al Gefari (Saikat)
+Ibne Sabid Saikat
 Azure Cloud & DevOps Engineer | AZ-104 & AZ-305 Certified
 GitHub: https://github.com/21saikat
 LinkedIn: https://linkedin.com/in/ibnesabidsaikat
